@@ -1,5 +1,10 @@
 # List of outputs available available
 
+output "vnet" {
+  description = "VNET resource"
+  value       = azurerm_virtual_network.vnet
+}
+
 output "location" {
   description = "The region where the Vnet is created"
   value       = azurerm_resource_group.vnet.location
