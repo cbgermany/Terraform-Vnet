@@ -32,13 +32,13 @@ variable "address_space" {
 
 variable "subnet_prefixes" {
   description = "The subnet prefixes"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
 variable "subnet_names" {
   description = "The name of the subnets"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
@@ -48,12 +48,12 @@ variable "gateway_subnet" {
 
 variable "dns_servers" {
   description = "The list of DNS servers for the Virtual network"
-  type        = "list"
+  type        = list(string)
 }
 
 variable "vpn_clients" {
   description = "The CIDR block range from wich IP addresses will be assigned to clients connecting by VPN"
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
