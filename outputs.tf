@@ -22,32 +22,22 @@ output "name" {
 
 # Subnets outputs
 
-output "subnet_ids" {
-  description = "list of IDs of the Sysman Subnets"
-  value       = [azurerm_subnet.subnets.*.id]
-}
-
-output "subnet_names" {
-  description = "The list of the subnet names"
-  value       = [azurerm_subnet.subnets.*.name]
-}
-
-output "subnets_cidr_blocks" {
-  description = "List of cidr_blocks of Sysman Subnets"
-  value       = [azurerm_subnet.subnets.*.address_prefix]
+output "subnets" {
+  description = "Created subnet resources"
+  value       = azurerm_subnet.subnets
 }
 
 output "gateway_subnet" {
   description = "The ID of the Gateway Subnets"
-  value       = azurerm_subnet.gateway.0.id
+  value       = join("", azurerm_subnet.gateway.*.id)
 }
 
 output "gateway_subnet_cidr_block" {
   description = "The cidr_block of Gateway Subnet"
-  value       = azurerm_subnet.gateway.0.address_prefix
+  value       = join("", azurerm_subnet.gateway.*.address_prefix)
 }
 
 output "virtual_network_gateway_id" {
   description = "The ID of the Virtual Network Gateway, used for VNET to VNET connectivity"
-  value       = element(azurerm_virtual_network_gateway.VNetGW.*.id, 0)
+  value       = join("", azurerm_virtual_network_gateway.VNetGW.*.id)
 }

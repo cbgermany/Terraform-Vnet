@@ -27,10 +27,10 @@ module "vnet" {
     subnet_prefixes   = ["10.25.0.0/23", "10.25.2.0/23", "10.25.4.0/23"]
     subnet_names      = ["Sysman", "FrontEnd", "BackEnd"]
 
-    create_gateway   = true
-    gateway_subnet   = "10.25.254.0/28"
-    vpn_clients      = ["10.26.0.0/24", "10.26.1.0/24"]
-    create_ddos      = false
+    create_gateway_vpn = true
+    gateway_subnet     = "10.25.254.0/28"
+    vpn_clients        = ["10.26.0.0/24", "10.26.1.0/24"]
+    create_ddos        = false
 }
 ```
 In the example above the subnets will be called Sysman, FrontEnd and BackEnd, the GatewaySubnet will be used for the VPN gateway. 

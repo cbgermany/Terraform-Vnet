@@ -20,11 +20,18 @@ resource "azurerm_resource_group" "vnet" {
 # Create the DDOS Protection Plan
 ##################################
 
-resource "azurerm_ddos_protection_plan" "ddos" {
+resource "azurerm_network_ddos_protection_plan" "ddos" {
   count               = var.create_vnet && var.create_ddos ? 1: 0
-  name                = format("%s%s", var.name, "DDOS")
-  location            = azurerm_resource_group.example.location
-  resource_group_name = azurerm_resource_group.example.name
+  name                = format("%s-%s", var.name, "DDOS")
+  location            = azurerm_resource_group.vnet.location
+  resource_group_name = azurerm_resource_group.vnet.name
+
+  tags = merge(
+    var.common_tags,
+    tomap(
+      {"Component" = "Network"}
+    )
+  )
 }
 
 ##################################
@@ -34,7 +41,7 @@ resource "azurerm_ddos_protection_plan" "ddos" {
 resource "azurerm_virtual_network" "vnet" {
   count               = var.create_vnet ? 1 : 0
   name                = var.name
-  address_space       = [var.address_space]
+  address_space       = var.address_space
   location            = azurerm_resource_group.vnet.location
   resource_group_name = azurerm_resource_group.vnet.name
   dns_servers         = var.dns_servers
@@ -62,11 +69,12 @@ resource "azurerm_virtual_network" "vnet" {
 #############################
 
 resource "azurerm_subnet" "subnets" {
-  count                = var.create_vnet && length(var.subnet_prefixes) > 0 ? length(var.subnet_prefixes) : 0
-  name                 = element(var.subnet_names, count.index)
-  address_prefix       = element(var.subnet_prefixes, count.index)
-  resource_group_name  = azurerm_resource_group.vnet.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+  for_each               = var.subnets
+    name                 = lookup(each.value, "name")
+    address_prefixes     = [lookup(each.value, "cidr")]
+    service_endpoints    = lookup(each.value, "service_endpoints")
+    resource_group_name  = azurerm_resource_group.vnet.name
+    virtual_network_name = azurerm_virtual_network.vnet[0].name
 }
 
 #############################
@@ -74,11 +82,11 @@ resource "azurerm_subnet" "subnets" {
 #############################
 
 resource "azurerm_subnet" "gateway" {
-  count                = var.create_vnet && length(list(var.gateway_subnet)) > 0 ? 1 : 0
+  count                = var.create_vnet && length(tolist(var.gateway_subnet)) > 0 ? 1 : 0
   name                 = "GatewaySubnet"
-  address_prefix       = var.gateway_subnet
+  address_prefixes     = [var.gateway_subnet[0]]
   resource_group_name  = azurerm_resource_group.vnet.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+  virtual_network_name = azurerm_virtual_network.vnet[0].name
 }
 
 #############################
@@ -86,12 +94,12 @@ resource "azurerm_subnet" "gateway" {
 #############################
 
 resource "azurerm_public_ip" "GWIP" {
-  count                        = var.create_vnet && length(list(var.gateway_subnet)) > 0 ? 1 : 0
-
-  name                         = format("%s%s", var.name, "GWIP")
-  resource_group_name          = azurerm_resource_group.vnet.name
-  location                     = azurerm_resource_group.vnet.location
-  public_ip_address_allocation = "Dynamic"
+  count               = var.create_vnet && length(tolist(var.gateway_subnet)) > 0 ? 1 : 0
+  name                = format("%s-%s", var.name, "GWIP")
+  resource_group_name = azurerm_resource_group.vnet.name
+  location            = azurerm_resource_group.vnet.location
+  allocation_method   = "Dynamic"
+  sku                 = "Standard"
 
   tags = merge(
     var.common_tags,
@@ -106,8 +114,8 @@ resource "azurerm_public_ip" "GWIP" {
 #############################
 
 resource "azurerm_virtual_network_gateway" "VNetGW" {
-  count               = var.create_vnet && var.create_gateway_vpn && length(list(var.gateway_subnet)) > 0 ? length(list(var.gateway_subnet)) : 0
-  name                = format("%s%s", var.name, "GW")
+  count               = var.create_vnet && length(tolist(var.gateway_subnet)) > 0 ? length(tolist(var.gateway_subnet)) : 0
+  name                = format("%s-%s", var.name, "GW")
   resource_group_name = azurerm_resource_group.vnet.name
   location            = azurerm_resource_group.vnet.location
 
@@ -119,14 +127,14 @@ resource "azurerm_virtual_network_gateway" "VNetGW" {
   sku           = "Basic"
 
   ip_configuration {
-    name                          = format("%s%s", var.name, "GWIP")
-    public_ip_address_id          = azurerm_public_ip.GWIP.id
+    name                          = format("%s-%s", var.name, "GWIP")
+    public_ip_address_id          = azurerm_public_ip.GWIP[0].id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = azurerm_subnet.gateway.id
+    subnet_id                     = azurerm_subnet.gateway[0].id
   }
 
   vpn_client_configuration {
-    address_space = [var.vpn_clients]
+    address_space = var.vpn_clients
 
     root_certificate {
       name             = "PS2RootCert"
