@@ -17,15 +17,29 @@ The module will create the initial resource group and networking for the followi
 
 ```hcl
 module "vnet" {
-    source   = "../modules/Terraform-vnet"
+    source = "../../modules/Terraform-vnet"
 
-    name           = "my-vnet-with-az"
-    location       = "UK south"
-    resource_group = "vnet_rsg"
-    cidr           = "10.25.0.0/16"
+    name           = "my-vnet"
+    location       = "UK South"
+    resource_group = "rg1"
+    address_space  = ["10.0.0.0/16"]
 
-    subnet_prefixes   = ["10.25.0.0/23", "10.25.2.0/23", "10.25.4.0/23"]
-    subnet_names      = ["Sysman", "FrontEnd", "BackEnd"]
+    subnets = {
+      subnet-1 = {
+        name              = "FrontEnd"
+        cidr              = "10.0.0.0/24
+        service_endpoints = []
+      },
+      subnet-2 = {
+        name              = "BackEnd",
+        cidr              = "10.0.1.0/24"
+        service_endpoints = []
+      }
+    }
+
+    create_ddos     = false
+
+    common_tags     = {map of tags}
 
     create_gateway_vpn = true
     gateway_subnet     = "10.25.254.0/28"
@@ -51,7 +65,7 @@ In the example above the subnets will be called Sysman, FrontEnd and BackEnd, th
 
 * **subnet_prefixes**: List of the Subnet prefixes
 
-* **subnet_names**: List of the Subnet names
+* **subnets**: Map of the Subnets
 
 * **gateway_subnet**: The Gateway Subnet for the VPNs, there can only be one and the Subnet will be Called GatewaySubnet
 
