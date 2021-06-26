@@ -22,17 +22,17 @@ module "vnet" {
     name           = "my-vnet"
     location       = "UK South"
     resource_group = "rg1"
-    address_space  = ["10.0.0.0/16"]
+    address_space  = ["10.25.0.0/16"]
 
     subnets = {
       subnet-1 = {
         name              = "FrontEnd"
-        cidr              = "10.0.0.0/24"
+        cidr              = "10.25.0.0/24"
         service_endpoints = []
       },
       subnet-2 = {
         name              = "BackEnd",
-        cidr              = "10.0.1.0/24"
+        cidr              = "10.25.1.0/24"
         service_endpoints = []
       }
     }
