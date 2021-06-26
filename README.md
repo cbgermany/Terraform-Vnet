@@ -27,7 +27,7 @@ module "vnet" {
     subnets = {
       subnet-1 = {
         name              = "FrontEnd"
-        cidr              = "10.0.0.0/24
+        cidr              = "10.0.0.0/24"
         service_endpoints = []
       },
       subnet-2 = {
